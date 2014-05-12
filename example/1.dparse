@@ -1,0 +1,211 @@
+/home/dontpanic/1.dlex
+/home/dontpanic/1.lua
+
+#: S
+#	C C : process_primary_expression
+#;
+
+#: C
+#	identifier C : process_identifier
+#	number : process_number
+#;
+
+: valid-parse-structure
+#	relational-expression : process_valid_parse_structure
+	valid-parse-structure valid-parse-structure : process_valid_parse_structure
+	declaration : process_declaration
+	statement : process_statement
+	function-definition : process_helper_directcopy
+;
+
+#Expressions
+
+: primary-expression 
+	identifier : process_identifier
+#	constant : process_constant
+	number : process_number
+	string : process_string
+#	lparenthesis expression rparenthesis : process_lrparenthese_expression
+;
+
+#: constant
+#	number : process_nothing
+#;
+
+: postfix-expression
+	primary-expression : process_helper_directcopy
+	postfix-expression lbracket expression rbracket : process_postfixexpr_lbk_expr_rbk
+	postfix-expression pplus : process_postfixexpr_pplus
+	postfix-expression mminus : process_postfixexpr_mminus
+	postfix-expression lparenthesis rparenthesis : process_postfixexpr_lr
+	postfix-expression lparenthesis argument-expression-list rparenthesis : process_postfixexpr_lp_arglist_lr
+#	lparenthesis type-name rparenthesis lbrace initializer-list rbrace
+#	lparenthesis type-name rparenthesis lbrace initializer-list comma rbrace
+;
+
+: argument-expression-list
+	assignment-expression : process_argument
+	argument-expression-list comma assignment-expression : process_argexprlist_comma_assignexpr
+;
+
+: multiplicative-expression
+	postfix-expression : process_helper_directcopy
+	multiplicative-expression star postfix-expression : process_multiexpr_star_postfixexpr
+	multiplicative-expression slash postfix-expression : process_multiexpr_slash_postfixexpr
+;
+
+: additive-expression
+	multiplicative-expression : process_helper_directcopy
+	additive-expression plus multiplicative-expression : process_addiexpr_plus_multiexpr
+	additive-expression minus multiplicative-expression : process_addiexpr_minus_multiexpr
+;
+
+: relational-expression
+	additive-expression : process_helper_directcopy
+	relational-expression less additive-expression : process_relexpr_less_addiexpr
+	relational-expression greater additive-expression : process_relexpr_greater_addiexpr
+	relational-expression gequ additive-expression : process_relexpr_gequ_addiexpr
+	relational-expression lequ additive-expression : process_relexpr_lequ_addiexpr
+;
+
+: equality-expression
+	relational-expression : process_helper_directcopy
+	equality-expression equ relational-expression : process_equexpr_equ_relexpr
+	equality-expression notequ relational-expression : process_equexpr_notequ_relexpr
+;
+
+: assignment-expression
+	equality-expression : process_helper_directcopy
+	postfix-expression assignment assignment-expression : process_postfixexpr_assign_assignexpr
+;
+
+: expression
+	assignment-expression : process_helper_directcopy
+	expression comma assignment-expression : process_expr_comma_assinexpr
+;
+
+#Declarations
+
+: declaration
+	declaration-specifiers semicolon : process_declspec
+	declaration-specifiers init-declarator-list semicolon : process_declspec_initdecllist_sc
+;
+
+: declaration-specifiers
+#	storage-class-specifier
+	type-specifier : process_helper_directcopy
+#	type-qualifier
+#	storage-class-specifier declaration-specifiers
+	type-specifier declaration-specifiers : process_typespec_declspec
+#	type-qualifier declaration-specifiers
+;
+
+: init-declarator-list
+	init-declarator : process_initdecl
+	init-declarator-list comma init-declarator : process_initdecllist_comma_initdecl
+;
+
+: init-declarator
+	declarator : process_helper_directcopy
+	declarator assignment initializer : process_decl_assign_init
+;
+
+: type-specifier
+	void : process_void
+	int : process_int
+;
+
+: declarator
+	direct-declarator : process_helper_directcopy
+;
+
+: direct-declarator
+	identifier : process_identifier
+	lparenthesis declarator rparenthesis : process_lp_decl_rp
+	direct-declarator lbracket rbracket : process_directdecl_lb_rb
+	direct-declarator lbracket assignment-expression rbracket : process_directdecl_lb_assignexpr_rb
+	direct-declarator lparenthesis rparenthesis : process_directdecl_lp_rp
+;
+
+: initializer
+	assignment-expression : process_helper_directcopy
+	lbrace initializer-list rbrace : process_lb_initlist_rb
+	lbrace initializer-list comma rbrace : process_lb_initlist_comma_rb
+;
+
+: initializer-list
+	initializer : process_init
+	designation initializer : process_design_init
+	initializer-list comma initializer : process_initlist_comma_init
+	initializer-list comma designation initializer : process_initlist_comma_design_init
+;
+
+: designation
+	designator-list assignment : process_designlist_assign
+;
+
+: designator-list
+	designator : process_design
+	designator-list designator : process_designlist_design
+;
+
+: designator
+	lbracket constant-expression rbracket : process_lb_constexpr_rb
+;
+
+: constant-expression
+	assignment-expression : process_helper_directcopy
+;
+
+#Statements
+
+: statement
+#	labeled-statement
+	compound-statement : process_helper_directcopy
+	expression-statement : process_helper_directcopy
+	selection-statement : process_helper_directcopy
+	iteration-statement : process_helper_directcopy
+	jump-statement : process_helper_directcopy
+;
+
+: compound-statement
+	lbrace block-item-list rbrace : process_lb_blockitemlist_rb
+	lbrace rbrace : process_lb_rb
+;
+
+: block-item-list
+	block-item : process_helper_directcopy
+	block-item-list block-item : process_blockitemlist
+;
+
+: block-item
+	declaration : process_helper_directcopy
+	statement : process_helper_directcopy
+;
+
+: expression-statement
+	semicolon : process_sc
+	expression semicolon : process_expr_sc
+;
+
+: selection-statement
+	if lparenthesis expression rparenthesis statement : process_ifstmt
+	if lparenthesis expression rparenthesis statement else statement : process_ifelsestmt
+#	switch lparenthesis expression rparenthesis statement
+;
+
+: iteration-statement
+	while lparenthesis expression rparenthesis statement : process_whilestmt
+	do statement while lparenthesis expression rparenthesis semicolon : process_dostmt
+	for lparenthesis expression semicolon expression semicolon expression rparenthesis statement : process_forstmt
+#	for lparenthesis declaration expression opt semicolon expression opt rparenthesis statement
+;
+
+: jump-statement
+	return expression semicolon : process_return_expr
+	return semicolon : process_return
+;
+
+: function-definition
+	declaration-specifiers declarator compound-statement : process_funcdef
+;
